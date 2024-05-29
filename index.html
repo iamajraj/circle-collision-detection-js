@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle Collision | github/iamajraj</title>
+  <style>
+    *{
+      margin: 0;
+    }
+    body{
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+    }
+    .instructions{
+      position: absolute;
+      color: white;
+      font-weight: bold;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .alert{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: white;
+      border-radius: 20px;
+      box-shadow: 0px 0px 20px 0px #ffffff;
+      animation: scaleUp 200ms ease;
+      transform-origin: 0 0;
+      display: none;
+    }
+    .show {
+      display: block;
+    }
+
+    @keyframes scaleUp{
+      0%{
+        scale: 0;
+      }
+      100%{
+        scale: 1;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <p class="instructions">Use keyboard [ &UpArrow; &DownArrow; &LeftArrow; &RightArrow;] key to move the red circle</p>
+  
+  <div class="alert">
+    <p>Collision Detected</p>
+  </div>
+
+  <canvas id="myCanvas"></canvas>
+
+  <script>
+
+      myCanvas.width = window.innerWidth
+      myCanvas.height = window.innerHeight
+
+      const ctx = myCanvas.getContext("2d");
+
+      class Ball{
+        constructor(x,y,radius,color = "black",label = ""){
+          this.x = x;
+          this.y = y;
+          this.radius = radius;
+          this.label = label;
+          this.color = color;
+        }
+
+        draw(){
+          ctx.fillStyle = this.color
+          ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI)
+          ctx.fill()
+
+          if(this.label){
+            ctx.beginPath();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = "bold 20px sans-serif"
+            ctx.fillStyle = "white"
+            ctx.fillText(this.label, this.x, this.y)
+          }
+        }
+
+        move(x,y){
+          if(x){
+            this.x += x;
+          }
+          if(y){
+            this.y += y;
+          }
+        }
+      }
+
+
+      const alertBox = document.querySelector('.alert')
+      const ballA = new Ball(200, 200, 50, "red", "A")
+      const ballB = new Ball(400, 400, 50, "gray", "B")
+
+      const balls = [ballA, ballB]
+
+      const SPEED = 2.5;
+
+      let stopMovingTowards = null;
+
+      function detectCollision(ball1, ball2){
+        const x1 = (ball1.x + (ball1.radius*2 / ball1.radius))
+        const x2 = (ball2.x + (ball2.radius*2 / ball2.radius))
+        
+        const y1 = (ball1.y + (ball1.radius*2 / ball1.radius))
+        const y2 = (ball2.y + (ball2.radius*2 / ball2.radius))
+        
+        const distance = Math.sqrt(((x2 - x1)**2) + ((y2-y1)**2))
+        const totalSum = ball1.radius + ball2.radius
+
+        return distance < totalSum
+      }
+
+      document.addEventListener("keydown", (ev) => {
+        let x = null;
+        let y = null;
+        if(ev.key == "ArrowUp"){
+          y = -SPEED
+        }
+        if(ev.key == "ArrowDown"){
+          y = SPEED
+        }
+        if(ev.key == "ArrowLeft"){
+          x = -SPEED
+        }
+        if(ev.key == "ArrowRight"){
+          x = SPEED
+        }
+
+        if(ev.key !== stopMovingTowards){
+          ballA.move(x,y)
+        }
+
+        if(ev.key === "ArrowUp" || ev.key === "ArrowDown" || ev.key === "ArrowLeft" || ev.key === "ArrowRight"){
+          if(detectCollision(ballA, ballB)){
+            stopMovingTowards = ev.key
+            alertBox.classList.add('show')
+          }else{
+            if(stopMovingTowards){
+              setTimeout(() => {
+                alertBox.classList.remove('show');
+              }, 500)
+              if(stopMovingTowards === ev.key){
+                stopMovingTowards = null;
+                ballA.move(x,y)
+              }
+            }
+          }
+        }
+      })
+      
+      function animate(){
+        requestAnimationFrame(animate)
+
+        ctx.clearRect(0,0,myCanvas.width, myCanvas.height)
+        ctx.fillStyle = "blue";
+        ctx.fillRect(0,0, myCanvas.width, myCanvas.height)
+        ctx.fillStyle = "white";
+
+        balls.forEach((b) => {
+          b.draw();
+        })
+      }
+
+
+      animate();
+  </script>
+</body>
+</html>
